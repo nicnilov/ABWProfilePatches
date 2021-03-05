@@ -101,6 +101,9 @@ namespace cgats_utilities {
     vector<V6> read_cgats_rgblab(const string& filename, bool include_lab)
     {
         Cgats_data data = populate_cgats(filename);
+        validate(data.rgb_loc < data.num_of_fields, "No RGB fields in CGATs file");
+        validate(data.lab_loc < data.num_of_fields, "No LAB fields in CGATs file");
+
         vector<V6> rgb_lab(data.num_of_sets);
         for (size_t i = 0; i < rgb_lab.size(); ++i)
         {
