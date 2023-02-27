@@ -25,6 +25,7 @@ SOFTWARE.
 #include <array>
 #include <string>
 #include <vector>
+#include <map>
 #include "color_conversions.h"
 #include "PatchFilter.h"
 #include "cgats.h"
@@ -70,5 +71,53 @@ string replace_suffix(string name, string suffix, string replacement);
 bool is_suffix_icm(string fname);
 bool is_suffix_txt(string fname);
 string remove_suffix(string fname);
-void print_stats(const LabStats& stats, bool extended=false);
+void print_stats(const LabStats& stats, bool extended);
 void print_argyll_batch_command_file(const char* batch_file_name, const char* pc);
+
+std::string to_lower(const std::string& arg);
+bool is_suffix_icm(std::string fname);
+bool is_suffix_txt(std::string fname);
+std::string remove_suffix(std::string fname);
+
+class MapRGB {
+public:
+    struct RGBLabAndLoc {
+        V3 lab;
+        int loc;
+    };
+    std::map<V3, vector<RGBLabAndLoc>> rgb_lab_loc;
+    void print_stats()
+    {
+        printf("%i unique patches\n         R   G   B        L*     a*     b*      Diff from ave   Patch#\n",
+            int(rgb_lab_loc.size()));
+        for (const auto& x : rgb_lab_loc)
+        {
+            Statistics stat[3];
+            for (size_t iv = 0; iv < x.second.size(); iv++)
+                for (int i = 0; i < 3; i++)
+                    stat[i].clk(x.second[iv].lab[i]);
+            printf("Patch: %3.0f %3.0f %3.0f   %6.1f %6.1f %6.1f\n",
+                x.first[0], x.first[1], x.first[2],
+                stat[0].ave(), stat[1].ave(), stat[2].ave());
+            if (x.second.size() > 1)
+                for (const auto& xx : x.second)
+                    printf("                       %6.1f %6.1f %6.1f    %4.1f %4.1f %4.1f     %i\n",
+                        xx.lab[0], xx.lab[1], xx.lab[2],
+                        xx.lab[0] - stat[0].ave(), xx.lab[1] - stat[1].ave(), xx.lab[2] - stat[2].ave(),
+                        xx.loc);
+        }
+    }
+    MapRGB(const vector<V6>& rgblab)
+    {
+        auto rgb_lab = cgats_utilities::separate_rgb_lab(rgblab);
+        for (size_t i = 0; i < rgblab.size(); i++)
+            if (!rgb_lab_loc.contains(rgb_lab.first[i]))
+                rgb_lab_loc[rgb_lab.first[i]] = { vector<RGBLabAndLoc>() };
+        for (size_t i = 0; i < rgblab.size(); i++)
+        {
+            RGBLabAndLoc x{ rgb_lab.second[i], static_cast<int>(i + 1) };
+            rgb_lab_loc[rgb_lab.first[i]].push_back(x);
+        }
+    }
+};
+

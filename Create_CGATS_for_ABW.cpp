@@ -1,5 +1,5 @@
 /*
-Copyright (c) <2020> <doug gray>
+Copyright (c) <2020,2021,2022,2023> <doug gray>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@ SOFTWARE.
 #include <iostream>
 #include <string>
 #include <locale>
+#include "cgats.h"
 #include "Create_CGATS_for_ABW_Routines.h"
 
 using std::cout;
@@ -33,23 +34,35 @@ void usage()
     const char* message = {
         "     ---------- Step 1 -----------\n"
         "ABWProfilePatches S|L [n]\n"
-        "  Creates RGB CGATS file Where S generates 52 RGB patches 0:5:255,\n"
-        "  L generates 256 RGB patches 0:1:255 and the optional [n] is number\n"
-        "  of pattern repeats\n\n"
+        "  Creates RGB CGATS file Where \"S\" generates 52 RGB patches 0:5:255,\n"
+        "  \"L\" generates 256 RGB patches 0:1:255 and the optional [n] is number\n"
+        "  of pattern repeats. Use this to print and read a B&W profile chart using\n"
+        "  i1profiler in B&W mode.\n\n"
+
+        "     ---------- Step 1.5 -----------\n"
+        "ABWProfilePatches EVAL MeasurementFilename.txt\n"
+        "  When \"EVAL\" is the first argument, the CGATs file is read, identical\n"
+        "  RGB patches are aggregated, average printed out for each\n"
+        "  patch's L*a*b* values, patch diffs from ave. and location# are printed.\n"
+        "  This can be used with regular, non-neutral patch sets\n\n"
 
         "     ---------- Step 2 -----------\n"
         "ABWProfilePatches MeasurementFilename.txt ProfileName\n"
-        "  If only MeasurementFilename is given, just display statistics,\n"
-        "  and extended tracking accuracy, otherwise\n"
         "  Reads a ABW CGATS measurement file of neutral patches and creates\n"
         "  synthetic RGBLAB CGATs files named \"ProfileName.txt\" and \"ProfileName_adj.txt\"\n"
         "  from which one creates ICC profiles. Then make profiles from these two files\n"
         "  using an automatically created batch file \"make_argyll_abw_profile.bat\"\n"
-        "  if you have Argyll's software installed or manually with a program like I1Profiler\n\n"
+        "  if you have Argyll's software installed or manually with a program like\n"
+        "  I1Profiler\n\n"
+        "  If only the MeasurementFilename is given, just display statistics,\n"
+        "  and extended tracking accuracy. This can be used to compare how close\n"
+        "  the intrinsic neutral tones are to sRGB. This mode can also be used to\n"
+        "  compare how well a B&W profile tracks ReLCol, RelCol/BPC, or AbsCol.\n"
+        "  See readme file in github for examples.\n\n"
 
         "     ---------- Step 3 -----------\n"
         "ABWProfilePatches Profile\n"
-        "  Where profile is the name of base profile with a suffix of \".icm\"\n"
+        "  Manual mode: Where profile is the name of base profile with a suffix of \".icm\"\n"
         "  There must be two profiles from the previous step. The second profile has the\n"
         "  same name with \"_adj\" added. The A2B1 tables inside the Profile_adj.icm\n"
         "  will replace the A2B1 table inside Profile.icm. Discard the \"_adj\" profile.\n"
@@ -63,18 +76,18 @@ int main(int argc, char** argv)
 {
     vector<string> args;
     for (int i = 1; i < argc; i++)   // copy args (except arg[0]) into string vector and make suffixes lower case
-    {
-        string data = argv[i];
-        for (auto p = find(data.begin(), data.end(), '.'); p < data.end(); p++)
-            *p = std::tolower(*p);
-        args.push_back(data);
-    }
+        args.push_back(argv[i]);
 
-    cout << "-----ABWProfileMaker V2.1-----\n";
+    cout << "-----ABWProfileMaker V2.2-----\n";
     if (argc == 1)
         usage();
     try {
-        if (args[0] == "S")             //ABWProfilePatches S [n]
+        if (args.size() == 2 && args[0] == std::string("EVAL"))
+        {
+            vector<V6> vals = cgats_utilities::read_cgats_rgblab(args[1]);
+            MapRGB(vals).print_stats();
+        }
+        else if (args[0] == "S")             //ABWProfilePatches S [n]
             {
             int rept{};
             if (args.size() == 2) try { rept = std::stoi(args[1]); } catch (std::exception e) { }
@@ -109,7 +122,7 @@ int main(int argc, char** argv)
             LabStats stats = process_cgats_measurement_file(args[0]);
             cgats_utilities::write_cgats_rgblab(stats.rgblab_neutral, second_arg + ".txt");
             cgats_utilities::write_cgats_rgblab(stats.rgblab_tint, second_arg + "_adj.txt");
-            print_stats(stats);
+            print_stats(stats, false);
 
             // Make a Windows batch command file to automate Argyll
             print_argyll_batch_command_file("make_argyll_abw_profile.bat", second_arg.data());
