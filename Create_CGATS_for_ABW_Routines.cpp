@@ -162,6 +162,7 @@ vector<double> smooth(const vector<double>& v, size_t n)
 }
 
 
+
 LabStats process_cgats_measurement_file(const string& filename)
 {
     LabStats ret{};
@@ -170,6 +171,7 @@ LabStats process_cgats_measurement_file(const string& filename)
     std::copy_if(vals.begin(), vals.end(), std::back_inserter(valsN), [](auto arg) {
         return arg[0] == arg[1] && arg[0] == arg[2];
         });
+    validate(valsN.size() == vals.size(), "patches must all be neutrals, ie(N,N,N)");
     vector<DuplicateStats> rgb_lab2 = remove_duplicates(valsN);      // sort, average, and remove duplicates
     vector<V6> rgb_lab;
     for (auto& x : rgb_lab2)
@@ -314,43 +316,41 @@ vector<V6> make_rgb_synth(PatchFilter& pf, bool color)
 
 void print_stats(const LabStats& stats, bool extended)
 {
-    if (stats.patch_filter.intent == PatchFilter::Intent::RELBPC)
-    {
-        printf("White Point L*a*b*:%6.2f %5.2f %5.2f\n"
-            "Black Point L*a*b*:%6.2f %5.2f %5.2f\n\n",
-            stats.white_point[0], stats.white_point[1], stats.white_point[2],
-            stats.black_point[0], stats.black_point[1], stats.black_point[2]);
-        printf("      ---Patch deltaE2000 variations---\n"
-            "These are deltaE2000 variations from the averages of RGB patches\n"
-            "comparing patch values with those of adjacent patches either\n"
-            "5 RGB steps or 15 RGB steps away.  Also shown are the deltaE200\n"
-            "variations but with a* and b* ignored.  This is useful to evaluate\n"
-            "Luminance without color shifts from neutral. These variations are much\n"
-            "smaller since a* and b* contribute heavily to deltaE2000 calculations.\n"
-            "Note: L* a* and b* are standard deviations of individual patches, not\n"
-            "dE2000, and are only printed when the charts have duplicated RGB patches\n\n"
-            "Steps (with ab zeroed)       5    15      5z   15z       L*    a*    b*\n");
+    printf("White Point L*a*b*:%6.2f %5.2f %5.2f\n"
+        "Black Point L*a*b*:%6.2f %5.2f %5.2f\n\n",
+        stats.white_point[0], stats.white_point[1], stats.white_point[2],
+        stats.black_point[0], stats.black_point[1], stats.black_point[2]);
+    printf("      ---Patch deltaE2000 variations---\n"
+        "These are deltaE2000 variations from the averages of RGB patches\n"
+        "comparing patch values with those of adjacent patches either\n"
+        "5 RGB steps or 15 RGB steps away.  Also shown are the deltaE200\n"
+        "variations but with a* and b* ignored (z cols). This is useful to evaluate\n"
+        "Luminance without color shifts from neutral. These variations are much\n"
+        "smaller since a* and b* contribute heavily to deltaE2000 calculations.\n"
+        "Note: L* a* and b* are standard deviations of individual patches, not\n"
+        "dE2000, and are only printed when the charts have duplicated RGB patches\n\n"
+        "Steps (with ab zeroed)       5    15      5z   15z       L*    a*    b*\n");
 
-        for (size_t i = 0; i < stats.percents.size(); i++)
-        {
-            if (stats.repeats >= 2)
-                printf("%3.0f Percent of dE00s <=  %5.2f %5.2f   %5.2f %5.2f    %5.2f %5.2f %5.2f\n", stats.percents[i],
-                    stats.distributionp_5[i],
-                    stats.distributionp_15[i],
-                    stats.distributionp_ab0_5[i],
-                    stats.distributionp_ab0_15[i],
-                    stats.distributionp_std_L[i],
-                    stats.distributionp_std_a[i],
-                    stats.distributionp_std_b[i]);
-            else
-                printf("%3.0f Percent of dE00s <=  %5.2f %5.2f   %5.2f %5.2f\n", stats.percents[i],
-                    stats.distributionp_5[i],
-                    stats.distributionp_15[i],
-                    stats.distributionp_ab0_5[i],
-                    stats.distributionp_ab0_15[i]);
-        }
-        printf("\n\n");
+    for (size_t i = 0; i < stats.percents.size(); i++)
+    {
+        if (stats.repeats >= 2)
+            printf("%3.0f Percent of dE00s <=  %5.2f %5.2f   %5.2f %5.2f    %5.2f %5.2f %5.2f\n", stats.percents[i],
+                stats.distributionp_5[i],
+                stats.distributionp_15[i],
+                stats.distributionp_ab0_5[i],
+                stats.distributionp_ab0_15[i],
+                stats.distributionp_std_L[i],
+                stats.distributionp_std_a[i],
+                stats.distributionp_std_b[i]);
+        else
+            printf("%3.0f Percent of dE00s <=  %5.2f %5.2f   %5.2f %5.2f\n", stats.percents[i],
+                stats.distributionp_5[i],
+                stats.distributionp_15[i],
+                stats.distributionp_ab0_5[i],
+                stats.distributionp_ab0_15[i]);
     }
+    printf("\n\n");
+
     if (extended)
     {
         string type;
@@ -468,21 +468,29 @@ void replace_icc1_A2B1_with_icc2_A2B1(string iccpath1, string iccpath2)
     write_binary_file(iccpath1, buf1);
 }
 
+std::string to_lower(const std::string& arg)
+{
+    std::string ret = arg;
+    for (auto& p : ret)
+        p = std::tolower(p);
+    return ret;
+}
+
 bool is_suffix_icm(std::string fname)
 {
     if (fname.size() < 4)
         return false;
-    return fname.substr(fname.size() - 4, 4) == ".icm";
+    return to_lower(fname.substr(fname.size() - 4, 4)) == ".icm";
 }
 
 bool is_suffix_txt(std::string fname)
 {
     if (fname.size() < 4)
         return false;
-    return fname.substr(fname.size() - 4, 4) == ".txt";
+    return to_lower(fname.substr(fname.size() - 4, 4)) == ".txt";
 }
 
-string remove_suffix(std::string fname)
+std::string remove_suffix(std::string fname)
 {
     auto dot_loc=fname.find_last_of('.');
     return fname.substr(0, dot_loc);

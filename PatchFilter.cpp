@@ -129,6 +129,8 @@ PatchFilter::PatchFilter(const vector<V6>& vin) :
         }
     }
     // Rel. Col. mode extends only the paper white point to L:100
+    // If the paper's white point is > 98.5 an Abs. Col. print may be
+    // deemed Rel. Col.
     else if (lab5[51][0] - lab5[50][0] > .3)    // REL
     {
         intent = Intent::REL;

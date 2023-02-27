@@ -8,7 +8,7 @@
 used to accurately print black and white images using programs that impliment ICC color management
 like Photoshop. It is unique in comparison to other tools in that it
 creates a fully functional B&W profile for use in Black and White
-workflows and is used in the same manner as regular color managed printing. For instance,
+workflows. It is used in the same manner as regular color managed printing. For instance,
 letting Photoshop manage "colors" and selecting Relative Intent with/without BPC.
 It produces accurate soft proofs including things like the subtle tones when printing B&W sepia.
 
@@ -28,20 +28,10 @@ This displays the installed profiles. Select your custom profile.
 Now it will show up in Photoshop's print dialog and you can select it to both soft proof and
 Photoshop's color managed printing.
 
-#### Workaround for Printers (Canon, etc) that don't show custom profiles printing B&W in Photoshop
-Photoshop sometimes disables showing non OEM profiles when you select B&W in the printer's dialog.
-This is a problem with Canon, among other, printers. Fortunately, there is a workaround that will
-not only show the custom profiles, but put them in the top selection area. This is also handy
-for putting regular, color, custom profiles that you have made at the top for rapid access.
-
-Open Windows Color Management dialog. Then select use profile checkbox then push the ADD button.
-This displays the installed profiles. Select your custom profile.
-Now it will show up in Photoshop's print dialog and you can select it to both soft proof and
-Photoshop's color managed printing.
-
 #### Requirements
-Windows x64, 7,8, or 10.
+Windows x64 vers 7,8,10,11.
 Spectrophotometer and software than can read printed patches and produce a CGATs file.
+I1Profiler can be used without a license to create, print, and scan charts w/o a license.
 Software than creates ICC profiles from CGATs files. Tested with Argyll and I1Profiler.
 Argyll is recommended but I1Profiler, which requires a license to make profiles, can be used.
 However, I1Profiler requires an additional manual step since it doesn't have a command line
@@ -85,7 +75,7 @@ and set the "use my settings for this device" then select your custom B&W profil
 the list of installed profiles. Now it will show up in Photoshop's print dialog.
 
 
-#### Making a Photoshop Color Managed Profile for Black and White
+#### Making an ICC, Photoshop compatible, Color Managed Profile for Black and White
 This operates in Photoshop
 just like regular printing letting Photoshop manage color printing - but with a B&W profile!
 It does require that the image be in RGB but with no color.
@@ -103,14 +93,53 @@ that matches your instrument (I1Pro, I1Pro2, or i1iSis). Here is an image of the
 
 Make sure you save your
 black and white printer settings in the printer driver so you can load the same settings
-when you print in the future. It's a good idea to name the profile and saved settings the same.
+when you print in the future. It's a good idea to name the profile you make and saved settings the same.
 Use Adobe ACPU or other program that bypasses color management. Alternately, you can use I1Profiler
-to print the provided chart. Load the appropriate chart *.txf*, also in directory *misc*.
+to print the provided chart file. Load the appropriate chart *.txf*, also in directory *misc*.
 For instance: *Repeat_5x_Neutrals_52_I1Pro2.txf*. The charts provided
 contain 260 patches which are the RGB sequence (0,0,0), (5,5,5), ... to (255,255,255)
 repeated 5 times and scrambled. Scan the print with a spectrophotometer using I1Profiler
 and save the measurement data as a CGATs text file by selecting "Save" then entering
 a file name and selecting "i1Profiler CGATS CIELab (*.txt)".
+
+#### Evaluating printer patch consistency
+If you suspect the patches are not printing consistently, you can run the prgrogram with
+the special option "EVAL" and it will de-randomize and sort the patches. It will also print the
+Lab values of each patch, error differences from the mean when multiple patches with the
+same RGB are in the CGATs file, and location of each patch. This
+option can also be used on regular color CGATs files and doesn't require the patches all be B&W.
+
+    ABWProfileMaker EVAL measurementfile.txt
+
+    ABWProfileMaker\misc>abwprofilemaker EVAL 9800_Y_ABW52x5Matte_M2.txt
+    -----ABWProfileMaker V2.2-----
+    52 unique patches
+             R   G   B        L*     a*     b*      Diff from ave   Patch#
+    Patch:   0   0   0     24.3    0.4   -0.0
+                             24.2    0.3    0.0    -0.1 -0.0  0.0     87
+                             24.4    0.4   -0.0     0.1  0.0  0.0     96
+                             24.3    0.4    0.0     0.0 -0.0  0.0     201
+                             24.3    0.3   -0.1    -0.0 -0.0 -0.1     208
+                             24.3    0.4   -0.0    -0.0  0.1  0.0     233
+    Patch:   5   5   5     24.8    0.5    0.1
+                             24.8    0.5    0.1     0.0  0.0 -0.0     71
+                             24.8    0.5    0.1     0.1 -0.0 -0.0     176
+                             24.8    0.5    0.2     0.1 -0.0  0.1     205
+                             24.5    0.5    0.1    -0.2  0.0  0.0     215
+                             24.8    0.4    0.1     0.0 -0.0  0.0     250
+                       ...............
+    Patch: 250 250 250     91.0    1.3   -0.1
+                             91.0    1.4   -0.2    -0.0  0.0 -0.2     85
+                             91.1    1.4   -0.1     0.1  0.0 -0.0     126
+                             90.9    1.4   -0.0    -0.1  0.0  0.0     207
+                             91.1    1.3   -0.0     0.1 -0.0  0.0     219
+                             91.0    1.3    0.0    -0.0 -0.1  0.1     260
+    Patch: 255 255 255     92.9    1.0   -0.9
+                             92.9    1.0   -1.0     0.0  0.1 -0.1     41
+                             92.8    0.9   -0.9    -0.1 -0.0 -0.0     66
+                             92.8    0.9   -0.8    -0.0 -0.0  0.0     168
+                             93.1    1.0   -0.9     0.2  0.0  0.0     204
+                             92.8    0.9   -0.8    -0.1 -0.0  0.0     259
 
 #### Constructing the B&W Profile
 Now just execute ABWProfilerMaker with the name of the measurement file and the desired
@@ -125,8 +154,8 @@ The last step is to execute the batch file that calls Argyll utilities to create
 
 That's it! You now have a B&W profile suitable for use in printing and soft proofing.
 Be sure to install it or just copy it into *C:\Windows\System32\spool\drivers\color*
-
-
+Note that the profile is for use only when printing B&W images using the printer's B&W mode.
+You must use B&W RGB images where all the RGB values are the same (ie: B&W) for accurate results.
 And here's what the print and image softproof looks like when printed letting the printer manage color.
 The first was with the 9800 set for "darkest" tone and the second with "lighter."
 
@@ -238,63 +267,73 @@ You can also run the program in steps that create the patch set, process spectro
 and splice reverse lookup color into the printing profile.
 Here's the instructions you get just running the program with no arguments:
 
-    -----ABWProfileMaker V2.1-----
+    -----ABWProfileMaker V2.2-----
          ---------- Step 1 -----------
     ABWProfilePatches S|L [n]
-      Creates RGB CGATS file Where S generates 52 RGB patches 0:5:255,
-      L generates 256 RGB patches 0:1:255 and the optional [n] is number
-      of pattern repeats
+      Creates RGB CGATS file Where "S" generates 52 RGB patches 0:5:255,
+      "L" generates 256 RGB patches 0:1:255 and the optional [n] is number
+      of pattern repeats. Use this to print and read a B&W profile chart using
+      i1profiler in B&W mode.
+
+         ---------- Step 1.5 -----------
+    ABWProfilePatches EVAL MeasurementFilename.txt
+      When "EVAL" is the first argument, the CGATs file is read, identical
+      RGB patches are aggregated, average printed out for each
+      patch's L*a*b* values, patch diffs from ave. and location# are printed.
+      This can be used with regular, non-neutral patch sets
 
          ---------- Step 2 -----------
     ABWProfilePatches MeasurementFilename.txt ProfileName
-      If only MeasurementFilename is given, just display statistics,
-      and extended tracking accuracy, otherwise
       Reads a ABW CGATS measurement file of neutral patches and creates
       synthetic RGBLAB CGATs files named "ProfileName.txt" and "ProfileName_adj.txt"
       from which one creates ICC profiles. Then make profiles from these two files
       using an automatically created batch file "make_argyll_abw_profile.bat"
-      if you have Argyll's software installed or manually with a program like I1Profiler
+      if you have Argyll's software installed or manually with a program like
+      I1Profiler
+
+      If only the MeasurementFilename is given, just display statistics,
+      and extended tracking accuracy. This can be used to compare how close
+      the intrinsic neutral tones are to sRGB. This mode can also be used to
+      compare how well a B&W profile tracks ReLCol, RelCol/BPC, or AbsCol.
+      See readme file in github for examples.
 
          ---------- Step 3 -----------
     ABWProfilePatches Profile
-      Where profile is the name of base profile with a suffix of ".icm"
-      There must be two profiles from the previous step. The second profile has the
+      Manual mode: Where profile is the name of base profile with a suffix of ".icm"
+      Use i1profiler to create two ICM profiles from the two output CGATs files from
+      step 2. The second profile has the
       same name with "_adj" added. The A2B1 tables inside the Profile_adj.icm
-      will replace the A2B1 table inside Profile.icm. Discard the "_adj" profile.
-      and install the first.
+      replace the A2B1 table inside Profile.icm. Discard the "_adj" profile.
+      and install the first in your system's profile directory.
 
 ## Installation
-A Windows x64 (64 bit) executable is provided. For those that wish to use Linux or
-iOS, there is standard source code.
-The provided C++17 code is portable and requires no libraries.
-A Visual Studio 2019 project is provided but one can also just load the
+A Windows x64 (64 bit) executable is provided as a "Release".
+For those that wish to use Linux or iOS, there is standard source code.
+The provided C++20 code is portable and requires no libraries.
+A Visual Studio 2022 project is provided but one can also just load the
 `.h` and `.cpp` files in the same directory, compile the source files,
 and link into an executable.
 
-
-### Comparing Printing Black and White in Full Color Mode
+### Comparing Printing Black and White images using Full Color Mode
 The second step in making the synthesized patch sets has an additional feature. It prints out
 a distribution that shows how much dE20000 variation occurs between steps of 5 and 15.
-This provides information on how smooth the neutral tone transitions are.  Additionally,
-if duplicates were selected when creating the patch set, it prints out the statistical
-distribution of L*, a* and b* between the same patches. This is useful for checking the
-consistency the printer.
+This provides information on how smooth the neutral tone transitions are.
 
 One easy way to see how much better Black and White mode over just using standard color printing to
 print black and white images is to compare Black and White against printing the neutral patches using
-standard color settings. I see over a 2 to 1 reduction in errors using Black and White.
+standard color settings. I see over a 2 to 1 reduction in L* errors using Black and White.
 
 Here is a comparison of the statistics for Glossy (PK Ink) on the Epson 9800 using
 ABW and using the same, device neutral patch set with full color selected.
 
-These are the statistics in color mode. This shows that adding CYM inks, even with
+First, these are the statistics in color mode. This shows that adding CYM inks, even with
 device neutral patches (R=G=B), which is required for color printing,
 produces much higher measurement variations.
 
 ##### These are the statistics printing black and white images using full color mode
 
 
-    -----ABWProfilePatches V2.0 in color printing mode-----
+    -----ABWProfilePatches V2.2 in color printing mode-----
 
     Statistics for: 9800Neutrals52x5_dev_M2.txt
 
@@ -322,9 +361,10 @@ produces much higher measurement variations.
 
 
 ##### These are the statistics printing black and white images using ABW
+This shows that B&W mode printing produces more consistent L*, a* and b*.
 
 
-    -----ABWProfilePatches V2.0 in ABW mode -----
+    -----ABWProfilePatches V2.2 in ABW mode -----
 
     Statistics for: 9800Neutrals52x5_ABWy_M2.txt
 
@@ -350,9 +390,9 @@ soft proofing. Here's the statistics.
 
 
 ##### Create Synthetic CGATs Files from B&W Patch File
-    G:\test>ABWProfileMaker 9800_Y_ABW52x5Matte_M2.txt 9800_ABW_Y_Matte
+    ABWProfileMaker 9800_Y_ABW52x5Matte_M2.txt 9800_ABW_Y_Matte
 
-    -----ABWProfileMaker V2.0-----
+    -----ABWProfileMaker V2.2-----
     Creating synthetic patch sets
       From: 9800_Y_ABW52x5Matte_M2.txt
       To:   9800_ABW_Y_Matte.txt
@@ -362,11 +402,10 @@ soft proofing. Here's the statistics.
     White Point L*a*b*: 92.89  0.95 -0.90
     Black Point L*a*b*: 24.32  0.36 -0.02
 
-          ---Patch deltaE2000 variations---
     These are deltaE2000 variations from the averages of RGB patches
     comparing patch values with those of adjacent patches either
     5 RGB steps or 15 RGB steps away.  Also shown are the deltaE200
-    variations but with a* and b* ignored.  This is useful to evaluate
+    variations but with a* and b* ignored (z cols). This is useful to evaluate
     Luminance without color shifts from neutral. These variations are much
     smaller since a* and b* contribute heavily to deltaE2000 calculations.
     Note: L* a* and b* are standard deviations of individual patches, not
@@ -381,40 +420,38 @@ soft proofing. Here's the statistics.
     100 Percent of dE00s <=   0.08  0.55    0.05  0.30     0.17  0.08  0.15
 
 ##### Execute the Created Command File: *make_argyll_abw_profile*
-    G:\test>make_argyll_abw_profile
+*make_argyll_abw_profile* runs the batch file which synthesizes two CGATs file,
+creates two ICC profiles, and merges the relevant tables from one to the other. Then
+removes the "_adj" temporary files.
 
-    G:\test>set ARGYLL_CREATE_WRONG_VON_KRIES_OUTPUT_CLASS_REL_WP=1
-    G:\test>txt2ti3 9800_ABW_Y_Matte.txt 9800_ABW_Y_Matte
-    G:\test>colprof -r .1 -qh -D 9800_ABW_Y_Matte.icm -O 9800_ABW_Y_Matte.icm 9800_ABW_Y_Matte
-    G:\test>txt2ti3 9800_ABW_Y_Matte_adj.txt 9800_ABW_Y_Matte_adj
-    G:\test>colprof -r .1 -qh -D 9800_ABW_Y_Matte_adj.icm -O 9800_ABW_Y_Matte_adj.icm 9800_ABW_Y_Matte_adj
-    G:\test>erase 9800_ABW_Y_Matte.ti3
-    G:\test>erase 9800_ABW_Y_Matte_adj.ti3
-    G:\test>erase 9800_ABW_Y_Matte.txt
-    G:\test>erase 9800_ABW_Y_Matte_adj.txt
+    set ARGYLL_CREATE_WRONG_VON_KRIES_OUTPUT_CLASS_REL_WP=1
+    txt2ti3 9800_ABW_Y_Matte.txt 9800_ABW_Y_Matte
+    colprof -r .1 -qh -D 9800_ABW_Y_Matte.icm -O 9800_ABW_Y_Matte.icm 9800_ABW_Y_Matte
+    txt2ti3 9800_ABW_Y_Matte_adj.txt 9800_ABW_Y_Matte_adj
+    colprof -r .1 -qh -D 9800_ABW_Y_Matte_adj.icm -O 9800_ABW_Y_Matte_adj.icm 9800_ABW_Y_Matte_adj
+    erase 9800_ABW_Y_Matte.ti3
+    erase 9800_ABW_Y_Matte_adj.ti3
+    erase 9800_ABW_Y_Matte.txt
+    erase 9800_ABW_Y_Matte_adj.txt
+    ABWProfileMaker 9800_ABW_Y_Matte.icm
+    erase 9800_ABW_Y_Matte_adj.icm
+    rem Install 9800_ABW_Y_Matte.icm in "C:\Windows\System32\spool\drivers\color"
 
-    G:\test>ABWProfileMaker 9800_ABW_Y_Matte.icm
-    -----ABWProfileMaker V2.0-----
-    Replaced A2B1 table in 9800_ABW_Y_Matte.icm with 9800_ABW_Y_Matte_adj.icm
-    9800_ABW_Y_Matte.icm may now be used to print and softproof ABW.
-
-    G:\test>erase 9800_ABW_Y_Matte_adj.icm
-    G:\test>rem Install 9800_ABW_Y_Matte.icm in "C:\Windows\System32\spool\drivers\color"
-    G:\test>
 
 ### Evaluating Profile Accuracy
 
 ABWProfileMaker can also evaluate the accuracy of a B&W profile or color profile when printing black and white.
-This is done by printing a chart that
-is assigned to sRGB in one of three modes: Relative Colorimetric with BPC, Relative Colorimetric without BPC,
-or Absolute Colorimetric. All three modes are deterministic. The printed patch, Lab values are colorimetric.
+This is done by assigning the B&W chart to sRGB. Then using Protoshop to print the chart
+in one of three modes: Relative Colorimetric with BPC, Relative Colorimetric without BPC,
+or Absolute Colorimetric. All three modes are, unlike Perceptual, deterministic and
+the printed patch, Lab values are colorimetric.
 Absolute mode should track the chart's sRGB for measurements that are in gamut. That is, when the printed patches
 are above the paper's black ink and below the paper's unprinted (white). Relative Colorimetric mode expands
 the upper range such that sRGB's white corresponds the measured paper white. In addition, the XYZ values are
 shifted so that paper white corresponds to Lab=(100,0,0).  Relative Colorimetric mode with BPC is further altered
 by shifting the paper's black point to Lab=(0,0,0). So while the paper's blackest black might be L*=4 and the
 whitest white is L*=94. the image Lab values are smoothly mapped all the way from L*=0 to L*=100. This prevents
-blocking of light and dark areas that exceed the paper's capability.
+blocking in light and dark areas that exceed the paper's capability.
 
 When ABWProfileMaker is executed with only one argument and that argument is a text file (ends with ".txt"),
 the measurement file will be evaluated as if the chart image was in sRGB. The print mode,
@@ -459,7 +496,7 @@ as well as variations between patches that have the same RGB values.
 
 Command: *ABWProfileMaker Repeat_5x_Neutrals_52_9800_Costco_Def_sRGB_M2.txt*
 
-    -----ABWProfileMaker V2.1-----
+    -----ABWProfileMaker V2.2-----
     Statistics for: Repeat_5x_Neutrals_52_9800_Costco_Def_sRGB_M2.txt
 
     White Point L*a*b*: 94.81 -1.52 -1.82
@@ -469,7 +506,7 @@ Command: *ABWProfileMaker Repeat_5x_Neutrals_52_9800_Costco_Def_sRGB_M2.txt*
     These are deltaE2000 variations from the averages of RGB patches
     comparing patch values with those of adjacent patches either
     5 RGB steps or 15 RGB steps away.  Also shown are the deltaE200
-    variations but with a* and b* ignored.  This is useful to evaluate
+    variations but with a* and b* ignored (z cols). This is useful to evaluate
     Luminance without color shifts from neutral. These variations are much
     smaller since a* and b* contribute heavily to deltaE2000 calculations.
     Note: L* a* and b* are standard deviations of individual patches, not
@@ -486,7 +523,8 @@ Command: *ABWProfileMaker Repeat_5x_Neutrals_52_9800_Costco_Def_sRGB_M2.txt*
 
 The second part shows the accuracy of the profile. L\*(sRGB) is the luminance of
 the sRGB values and goes from 0 to 100.  L\*(proj) is the scaled sRGB luminance
-and is calculated based on the intent of the printed image.
+and is calculated based on the intent of the printed image. In this case
+Relative Coloriemtric with BPC.
 
     Continuous slope, may be Relative Colorimetric with BPC
     RGB  L*(sRGB)  L*(proj)  L*a*b* (Measured)   Diff
