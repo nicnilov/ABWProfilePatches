@@ -28,6 +28,17 @@ This displays the installed profiles. Select your custom profile.
 Now it will show up in Photoshop's print dialog and you can select it to both soft proof and
 Photoshop's color managed printing.
 
+#### Workaround for Printers (Canon, etc) that don't show custom profiles printing B&W in Photoshop
+Photoshop sometimes disables showing non OEM profiles when you select B&W in the printer's dialog.
+This is a problem with Canon, among other, printers. Fortunately, there is a workaround that will
+not only show the custom profiles, but put them in the top selection area. This is also handy
+for putting regular, color, custom profiles that you have made at the top for rapid access.
+
+Open Windows Color Management dialog. Then select use profile checkbox then push the ADD button.
+This displays the installed profiles. Select your custom profile.
+Now it will show up in Photoshop's print dialog and you can select it to both soft proof and
+Photoshop's color managed printing.
+
 #### Requirements
 Windows x64, 7,8, or 10.
 Spectrophotometer and software than can read printed patches and produce a CGATs file.
